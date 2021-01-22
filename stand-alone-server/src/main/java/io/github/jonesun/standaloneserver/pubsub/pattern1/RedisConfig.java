@@ -1,14 +1,10 @@
 package io.github.jonesun.standaloneserver.pubsub.pattern1;
 
-import io.github.jonesun.standaloneserver.pubsub.pattern2.Receiver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
-import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
@@ -21,14 +17,9 @@ import org.springframework.data.redis.serializer.GenericToStringSerializer;
 public class RedisConfig {
 
     @Bean
-    RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory();
-    }
-
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate() {
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         final RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory());
+        template.setConnectionFactory(redisConnectionFactory);
         template.setValueSerializer(new GenericToStringSerializer<>(Object.class));
         return template;
     }
@@ -39,8 +30,8 @@ public class RedisConfig {
     }
 
     @Bean
-    MessagePublisher messagePublisher() {
-        return new RedisMessagePublisher(redisTemplate(), topic());
+    MessagePublisher messagePublisher(RedisConnectionFactory redisConnectionFactory) {
+        return new RedisMessagePublisher(redisTemplate(redisConnectionFactory), topic());
     }
 
     @Bean
@@ -49,10 +40,10 @@ public class RedisConfig {
     }
 
     @Bean
-    RedisMessageListenerContainer redisContainer() {
+    RedisMessageListenerContainer redisContainer(RedisConnectionFactory redisConnectionFactory) {
         RedisMessageListenerContainer container
                 = new RedisMessageListenerContainer();
-        container.setConnectionFactory(redisConnectionFactory());
+        container.setConnectionFactory(redisConnectionFactory);
         container.addMessageListener(messageListener(), topic());
         return container;
     }
