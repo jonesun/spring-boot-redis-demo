@@ -58,9 +58,9 @@ public class CacheAnnotationUserService implements UserService {
     }
 
     @Override
-    @CachePut(key = "#userId")
+    @CacheEvict(key = "#userId")
     public User deleteById(Long userId) {
-        logger.info("更新用户：{}", userId);
+        logger.info("删除用户：{}", userId);
         return null;
     }
 

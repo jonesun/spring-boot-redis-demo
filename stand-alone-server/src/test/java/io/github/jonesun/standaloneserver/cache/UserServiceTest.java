@@ -1,10 +1,7 @@
 package io.github.jonesun.standaloneserver.cache;
 
 import io.github.jonesun.standaloneserver.redisdata.Student;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author jone.sun
  * @date 2021/1/22 17:46
  */
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
 class UserServiceTest {
 
@@ -57,14 +55,14 @@ class UserServiceTest {
     }
 
     @Order(4)
-    @Disabled
+//    @Disabled
     @Test
     void deleteById() {
         userService.deleteById(user.getId());
     }
 
     @Order(5)
-    @Disabled
+//    @Disabled
     @Test
     void clear() {
         userService.clear();
