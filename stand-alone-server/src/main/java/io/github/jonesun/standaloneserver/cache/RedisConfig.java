@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,21 +35,21 @@ public class RedisConfig extends CachingConfigurerSupport {
     @Autowired
     RedisConnectionFactory redisConnectionFactory;
 
-    /**
-     * 自定义生成redis-key
-     */
-    @Override
-    public KeyGenerator keyGenerator() {
-        return (o, method, objects) -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append(o.getClass().getName()).append(".");
-            sb.append(method.getName()).append(".");
-            for (Object obj : objects) {
-                sb.append(obj.toString());
-            }
-            return sb.toString();
-        };
-    }
+//    /**
+//     * 自定义生成redis-key
+//     */
+//    @Override
+//    public KeyGenerator keyGenerator() {
+//        return (o, method, objects) -> {
+//            StringBuilder sb = new StringBuilder();
+//            sb.append(o.getClass().getName()).append(".");
+//            sb.append(method.getName()).append(".");
+//            for (Object obj : objects) {
+//                sb.append(obj.toString());
+//            }
+//            return sb.toString();
+//        };
+//    }
 
 
     @Bean
@@ -127,5 +128,12 @@ public class RedisConfig extends CachingConfigurerSupport {
 
         return redisTemplate;
     }
+
+    @Override
+    public CacheErrorHandler errorHandler() {
+        //设置和redis交互报错时的错误处理器，仅在使用cacheAnnotation注解方式时生效
+        return new MyCacheErrorHandler();
+    }
+
 
 }

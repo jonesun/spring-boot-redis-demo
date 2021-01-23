@@ -1,4 +1,6 @@
-package io.github.jonesun.standaloneserver.cache;
+package io.github.jonesun.standaloneserver.cache.service;
+
+import io.github.jonesun.standaloneserver.cache.User;
 
 /**
  * @author jone.sun

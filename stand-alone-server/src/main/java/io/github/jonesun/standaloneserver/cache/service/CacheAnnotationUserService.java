@@ -1,5 +1,6 @@
-package io.github.jonesun.standaloneserver.cache;
+package io.github.jonesun.standaloneserver.cache.service;
 
+import io.github.jonesun.standaloneserver.cache.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
