@@ -27,9 +27,17 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Autowired
     private CacheManager cacheManager;
+//
+//    //测试抛出异常
+//    private final AtomicBoolean isThrowTestError = new AtomicBoolean();
+//
+//
+//    //测试一个商品抛出一个异常
+//    private final ConcurrentHashMap<Long, Boolean> throwTestHashMap = new ConcurrentHashMap<>();
 
     @Override
     public void init(Goods goods) {
+//        throwTestHashMap.put(goods.getId(), false);
         getGoodsCache().put(goods.getId(), goods);
     }
 
@@ -40,7 +48,6 @@ public class GoodsServiceImpl implements GoodsService {
                 .orElse(0);
     }
 
-    @Transactional
     @Override
     public boolean buy(Long goodsId) {
         //使用jvm提供的锁机制即可
@@ -48,36 +55,31 @@ public class GoodsServiceImpl implements GoodsService {
         //方式二: 使用lock, 缺点如果逻辑上出现异常(未捕获的)导致锁未及时释放的话，会导致后面的请求都会由于获取不到锁而失败，一个商品抢购还好，如果好多商品，会因为某一个异常导致所有商品都失败
         //方式三(推荐)：使用ConcurrentHashMap，一个商品一个锁(或者一段数量一个锁)，这样可以在某个商品秒杀出现异常时，不影响其他商品
 
-        //如果是单机环境的话，使用ConcurrentHashMap是不错的选择，不过如果是集群情况下(部署到多个服务器上)，使用jvm的锁机制就满足不了需求了，这个时候就需要使用分布式的技术了
+        //如果是单机环境的话，使用ConcurrentHashMap是不错的选择，不过如果是集群情况下(部署到多个服务器上)，使用jvm的锁机制就满足不了需求了，这个时候就需要使用Redisson了
         return buyWithLockConcurrentHashMapLock(goodsId);
     }
 
 
     private synchronized boolean buyWithSynchronized(Long goodsId) {
-        throwTestError();
+        throwTestError(goodsId);
         return normalBuy(goodsId);
     }
 
-    //测试抛出异常
-    private final AtomicBoolean isThrowTestError = new AtomicBoolean();
+
 
     private final Lock lock = new ReentrantLock();
 
     private boolean buyWithLock(Long goodsId) {
 //        lock.lock();
 //        try {
-//            throwTestError();
+//            throwTestError(goodsId);
 //            return normalBuy(goodsId);
-////        }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return false;
 //        } finally {
 //            lock.unlock();
 //        }
         try {
             if(lock.tryLock(2, TimeUnit.SECONDS)) {
-                throwTestError();
+                throwTestError(goodsId);
                 return normalBuy(goodsId);
             }
             logger.error("获取不到锁");
@@ -97,12 +99,12 @@ public class GoodsServiceImpl implements GoodsService {
 
         try {
             if(doLock(String.valueOf(goodsId))) {
-                throwTestError();
+                throwTestError(goodsId);
                 return normalBuy(goodsId);
             }
             logger.error("获取不到锁");
             return false;
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
             logger.error("发生异常", e);
             return false;
@@ -125,10 +127,17 @@ public class GoodsServiceImpl implements GoodsService {
     }
 
     private void throwTestError() {
-        if(!isThrowTestError.get()) {
-            isThrowTestError.set(true);
-            throw new RuntimeException("手动测试抛出异常");
-        }
+//        if(!isThrowTestError.getAndSet(true)) {
+//            logger.error("抛出异常: " + isThrowTestError);
+//            throw new RuntimeException("手动测试抛出异常");
+//        }
+    }
+
+    private void throwTestError(Long goodsId) {
+//        throwTestError();
+//        if(throwTestHashMap.replace(goodsId, false,true)) {
+//            throw new RuntimeException(goodsId + "手动测试抛出异常");
+//        }
     }
 
 

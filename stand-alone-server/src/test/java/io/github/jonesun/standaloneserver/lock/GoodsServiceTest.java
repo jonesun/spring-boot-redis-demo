@@ -39,7 +39,6 @@ class GoodsServiceTest {
 
     @Order(2)
     @Test
-    @Disabled
     void buy() {
         goodsService.buy(TEST_GOODS_ID);
     }
@@ -48,15 +47,12 @@ class GoodsServiceTest {
     @Order(3)
     @Test
     void batchBuy() throws InterruptedException {
-        batchBuyByGoodsId(TEST_GOODS_ID);
-    }
-
-    private void batchBuyByGoodsId(Long goodsId) throws InterruptedException {
-        Integer inventory = goodsService.getInventoryByGoodsId(goodsId);
-        logger.info("【{}】准备秒杀, 当前库存: {}", goodsId, inventory);
+        Integer inventory = goodsService.getInventoryByGoodsId(TEST_GOODS_ID);
+        logger.info("【{}】准备秒杀, 当前库存: {}", TEST_GOODS_ID, inventory);
         LocalDateTime startTime = LocalDateTime.now();
-        AtomicInteger atomicInteger = new AtomicInteger();
-        AtomicInteger failAtomicInteger = new AtomicInteger();
+        AtomicInteger buySuccessAtomicInteger = new AtomicInteger();
+        AtomicInteger notBoughtAtomicInteger = new AtomicInteger();
+        AtomicInteger errorAtomicInteger = new AtomicInteger();
         final int totalNum = 300;
         //用于发出开始信号
         final CountDownLatch countDownLatchSwitch = new CountDownLatch(1);
@@ -76,13 +72,13 @@ class GoodsServiceTest {
 
                     boolean result = goodsService.buy(TEST_GOODS_ID);
                     if (result) {
-                        atomicInteger.incrementAndGet();
+                        buySuccessAtomicInteger.incrementAndGet();
                     } else {
-                        failAtomicInteger.incrementAndGet();
+                        notBoughtAtomicInteger.incrementAndGet();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    failAtomicInteger.incrementAndGet();
+                    errorAtomicInteger.incrementAndGet();
                 } finally {
                     semaphore.release();
                     countDownLatch.countDown();
@@ -93,9 +89,10 @@ class GoodsServiceTest {
         }
         countDownLatchSwitch.countDown();
         countDownLatch.await();
-        logger.info("测试完成,花费 {}毫秒，【{}】总共{}个用户抢购{}件商品，{}个人成功 {}个人失败，商品还剩{}个", goodsId, ChronoUnit.MILLIS.between(startTime, LocalDateTime.now()), totalNum,
-                inventory, atomicInteger.get(), failAtomicInteger.get(), goodsService.getInventoryByGoodsId(goodsId));
-        assertEquals(inventory, atomicInteger.get());
+        logger.info("测试完成,花费 {}毫秒，【{}】总共{}个用户抢购{}件商品，{}个人买到 {}个人未买到，{}个人发生异常，商品还剩{}个", TEST_GOODS_ID, ChronoUnit.MILLIS.between(startTime, LocalDateTime.now()), totalNum,
+                inventory, buySuccessAtomicInteger.get(), notBoughtAtomicInteger.get(), errorAtomicInteger.get(),
+                goodsService.getInventoryByGoodsId(TEST_GOODS_ID));
+        assertEquals(inventory, buySuccessAtomicInteger.get());
     }
 
 }
