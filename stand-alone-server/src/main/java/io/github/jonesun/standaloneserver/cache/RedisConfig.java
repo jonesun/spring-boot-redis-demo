@@ -126,6 +126,8 @@ public class RedisConfig extends CachingConfigurerSupport {
         redisTemplate.setHashValueSerializer(j2jrs);
         redisTemplate.afterPropertiesSet();
 
+//        //开启事务支持
+//        redisTemplate.setEnableTransactionSupport(true);
         return redisTemplate;
     }
 

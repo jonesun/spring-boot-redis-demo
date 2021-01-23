@@ -39,18 +39,24 @@ class GoodsServiceTest {
 
     @Order(2)
     @Test
+    @Disabled
     void buy() {
         goodsService.buy(TEST_GOODS_ID);
     }
 
-    @DisplayName("秒杀")
+    @DisplayName("秒杀单个商品")
     @Order(3)
     @Test
     void batchBuy() throws InterruptedException {
-        Integer inventory = goodsService.getInventoryByGoodsId(TEST_GOODS_ID);
-        logger.info("准备秒杀, 当前库存: {}", inventory);
+        batchBuyByGoodsId(TEST_GOODS_ID);
+    }
+
+    private void batchBuyByGoodsId(Long goodsId) throws InterruptedException {
+        Integer inventory = goodsService.getInventoryByGoodsId(goodsId);
+        logger.info("【{}】准备秒杀, 当前库存: {}", goodsId, inventory);
         LocalDateTime startTime = LocalDateTime.now();
         AtomicInteger atomicInteger = new AtomicInteger();
+        AtomicInteger failAtomicInteger = new AtomicInteger();
         final int totalNum = 300;
         //用于发出开始信号
         final CountDownLatch countDownLatchSwitch = new CountDownLatch(1);
@@ -71,9 +77,12 @@ class GoodsServiceTest {
                     boolean result = goodsService.buy(TEST_GOODS_ID);
                     if (result) {
                         atomicInteger.incrementAndGet();
+                    } else {
+                        failAtomicInteger.incrementAndGet();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    failAtomicInteger.incrementAndGet();
                 } finally {
                     semaphore.release();
                     countDownLatch.countDown();
@@ -84,7 +93,8 @@ class GoodsServiceTest {
         }
         countDownLatchSwitch.countDown();
         countDownLatch.await();
-        logger.info("测试完成,花费 {}毫秒，总共{}个用户抢购{}件商品，成功{}个", ChronoUnit.MILLIS.between(startTime, LocalDateTime.now()), totalNum, inventory, atomicInteger.get());
+        logger.info("测试完成,花费 {}毫秒，【{}】总共{}个用户抢购{}件商品，{}个人成功 {}个人失败，商品还剩{}个", goodsId, ChronoUnit.MILLIS.between(startTime, LocalDateTime.now()), totalNum,
+                inventory, atomicInteger.get(), failAtomicInteger.get(), goodsService.getInventoryByGoodsId(goodsId));
         assertEquals(inventory, atomicInteger.get());
     }
 
