@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
  * @author jone.sun
  * @date 2021/1/22 16:46
  */
-@Service
+@Service("cacheAnnotationUserService")
 @CacheConfig(cacheNames = "user")
 public class CacheAnnotationUserService implements UserService {
 

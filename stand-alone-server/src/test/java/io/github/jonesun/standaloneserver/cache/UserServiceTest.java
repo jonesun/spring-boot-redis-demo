@@ -1,10 +1,10 @@
 package io.github.jonesun.standaloneserver.cache;
 
-import io.github.jonesun.standaloneserver.redisdata.Student;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
@@ -23,6 +23,9 @@ class UserServiceTest {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
+//    @Qualifier("cacheAnnotationUserService")
+//    @Qualifier("cacheManagerUserService")
+    @Qualifier("redisTemplateUserService")
     UserService userService;
 
     static User user;
