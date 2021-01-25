@@ -56,7 +56,7 @@ public class GoodsServiceImpl implements GoodsService {
         //方式三(推荐)：使用ConcurrentHashMap，一个商品一个锁(或者一段数量一个锁)，这样可以在某个商品秒杀出现异常时，不影响其他商品
 
         //如果是单机环境的话，使用ConcurrentHashMap是不错的选择，不过如果是集群情况下(部署到多个服务器上)，使用jvm的锁机制就满足不了需求了，这个时候就需要使用Redisson了
-        return buyWithLockConcurrentHashMapLock(goodsId);
+        return buyWithRedisLock(goodsId);
     }
 
 
@@ -64,8 +64,6 @@ public class GoodsServiceImpl implements GoodsService {
         throwTestError(goodsId);
         return normalBuy(goodsId);
     }
-
-
 
     private final Lock lock = new ReentrantLock();
 
@@ -123,6 +121,30 @@ public class GoodsServiceImpl implements GoodsService {
         ReentrantLock lock = (ReentrantLock) lockConcurrentHashMap.get(key);
         if(lock != null && lock.isHeldByCurrentThread()) {
             lock.unlock();
+        }
+    }
+
+    @Autowired
+    RedisLockUtils redisLockUtils;
+
+    private boolean buyWithRedisLock(Long goodsId) {
+        String lockStr = null;
+        try {
+            lockStr = redisLockUtils.getLock(String.valueOf(goodsId), 2, TimeUnit.SECONDS);
+            if(lockStr != null) {
+                return normalBuy(goodsId);
+            }
+            logger.error("获取不到锁");
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("发生异常", e);
+            return false;
+        } finally {
+            if(lockStr != null) {
+                redisLockUtils.unLock(String.valueOf(goodsId),lockStr);
+            }
+
         }
     }
 
