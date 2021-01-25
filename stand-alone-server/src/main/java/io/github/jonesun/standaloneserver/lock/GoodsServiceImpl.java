@@ -1,20 +1,16 @@
 package io.github.jonesun.standaloneserver.lock;
 
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -58,7 +54,7 @@ public class GoodsServiceImpl implements GoodsService {
         //方式三(推荐)：使用ConcurrentHashMap，一个商品一个锁(或者一段数量一个锁)，这样可以在某个商品秒杀出现异常时，不影响其他商品
 
         //如果是单机环境的话，使用ConcurrentHashMap是不错的选择，不过如果是集群情况下(部署到多个服务器上)，使用jvm的锁机制就满足不了需求了，这个时候就需要使用Redisson了
-        return buyWithRedissonLock(goodsId);
+        return buyWithLockConcurrentHashMapLock(goodsId);
     }
 
 
@@ -78,7 +74,7 @@ public class GoodsServiceImpl implements GoodsService {
 //            lock.unlock();
 //        }
         try {
-            if(lock.tryLock(2, TimeUnit.SECONDS)) {
+            if (lock.tryLock(2, TimeUnit.SECONDS)) {
                 throwTestError(goodsId);
                 return normalBuy(goodsId);
             }
@@ -98,7 +94,7 @@ public class GoodsServiceImpl implements GoodsService {
     private boolean buyWithLockConcurrentHashMapLock(Long goodsId) {
 
         try {
-            if(doLock(String.valueOf(goodsId))) {
+            if (doLock(String.valueOf(goodsId))) {
                 throwTestError(goodsId);
                 return normalBuy(goodsId);
             }
@@ -121,7 +117,7 @@ public class GoodsServiceImpl implements GoodsService {
 
     private void releaseLock(String key) {
         ReentrantLock lock = (ReentrantLock) lockConcurrentHashMap.get(key);
-        if(lock != null && lock.isHeldByCurrentThread()) {
+        if (lock != null && lock.isHeldByCurrentThread()) {
             lock.unlock();
         }
     }
@@ -131,6 +127,7 @@ public class GoodsServiceImpl implements GoodsService {
 
     /**
      * 使用redis锁
+     *
      * @param goodsId
      * @return
      */
@@ -138,7 +135,7 @@ public class GoodsServiceImpl implements GoodsService {
         String lockStr = null;
         try {
             lockStr = redisLockUtils.getLock(String.valueOf(goodsId), 2, TimeUnit.SECONDS);
-            if(lockStr != null) {
+            if (lockStr != null) {
                 return normalBuy(goodsId);
             }
             logger.error("获取不到锁");
@@ -148,33 +145,38 @@ public class GoodsServiceImpl implements GoodsService {
             logger.error("发生异常", e);
             return false;
         } finally {
-            if(lockStr != null) {
-                redisLockUtils.unLock(String.valueOf(goodsId),lockStr);
+            if (lockStr != null) {
+                redisLockUtils.unLock(String.valueOf(goodsId), lockStr);
             }
 
         }
     }
 
 
-
-    @Autowired
-    private RedissonClient redissonClient;
-
-    private boolean buyWithRedissonLock(Long productId) {
-        String key = "dec_store_lock_" + productId;
-        RLock lock = redissonClient.getLock(key);
-        try {
-            lock.lock();
-            return normalBuy(productId);
-        } catch (Exception e) {
-
-            logger.error("发生异常", e);
-        } finally {
-            //解锁
-            lock.unlock();
-        }
-        return true;
-    }
+//    @Autowired(required = false)
+//    private RedissonClient redissonClient;
+//
+//    private boolean buyWithRedissonLock(Long productId) {
+//        if(redissonClient == null) {
+//            logger.error("未配置RedissonClient");
+//            return false;
+//        }
+//        String key = "dec_store_lock_" + productId;
+//        RLock lock = redissonClient.getLock(key);
+//        try {
+//            if(lock.tryLock(2, TimeUnit.SECONDS)) {
+//                return normalBuy(productId);
+//            }
+//            logger.error("获取不到锁");
+//            return false;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            logger.error("获取锁异常", e);
+//            return false;
+//        } finally {
+//            lock.unlock();
+//        }
+//    }
 
     private void throwTestError() {
 //        if(!isThrowTestError.getAndSet(true)) {

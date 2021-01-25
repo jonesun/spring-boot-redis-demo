@@ -10,8 +10,9 @@ spring:
     ## Redis服务器连接密码（默认为空）
     password:
 
-    redisson:
-      file: "classpath:redisson-single.yml"
+#    # redisson相关配置, 会导致redis原有配置失效，使用时需注意
+#    redisson:
+#      file: "classpath:redisson-single.yml"
 
 server:
   port: 8080
