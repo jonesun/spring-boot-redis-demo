@@ -2,6 +2,7 @@ package io.github.jonesun.standaloneserver.lock.controller;
 
 import io.github.jonesun.standaloneserver.lock.Goods;
 import io.github.jonesun.standaloneserver.lock.GoodsService;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -37,6 +38,7 @@ class GoodsControllerTest {
     @Autowired
     GoodsService goodsService;
 
+    @Disabled
     @DisplayName("集群下商品秒杀")
     @Test
     void buyWithCluster() {
