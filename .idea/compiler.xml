@@ -8,15 +8,18 @@
         <outputRelativeToContentRoot value="true" />
         <module name="stand-alone-server" />
         <module name="spring-boot-redis-demo" />
+        <module name="sentinel-server" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="sentinel-server" target="15" />
       <module name="spring-boot-redis-demo" target="15" />
       <module name="stand-alone-server" target="15" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="sentinel-server" options="-parameters" />
       <module name="stand-alone-server" options="-parameters" />
     </option>
   </component>
