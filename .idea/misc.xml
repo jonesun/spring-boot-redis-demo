@@ -6,6 +6,7 @@
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/stand-alone-server/pom.xml" />
         <option value="$PROJECT_DIR$/master-slave-server/pom.xml" />
+        <option value="$PROJECT_DIR$/sentinel-server/pom.xml" />
       </list>
     </option>
   </component>
